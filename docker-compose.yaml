@@ -1,0 +1,34 @@
+version: '3'
+services:
+  sdkopen-auth-keycloak-db-postgresql:
+    image: postgres:13
+    container_name: sdkopen-auth-keycloak-db-postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=sdkopen-auth-keycloak
+      - POSTGRES_USER=sdkopen-auth-keycloak
+      - POSTGRES_PASSWORD=sdkopen-auth-keycloak
+    volumes:
+      - ./.docker/db/postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sdkopen-auth-keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  sdkopen-auth-keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    container_name: sdkopen-auth-keycloak
+    command: start-dev
+    depends_on:
+      - sdkopen-auth-keycloak-db-postgresql
+    ports:
+      - "8000:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://sdkopen-auth-keycloak-db-postgresql:5432/sdkopen-auth-keycloak
+      - KC_DB_USERNAME=sdkopen-auth-keycloak
+      - KC_DB_PASSWORD=sdkopen-auth-keycloak
+      - KC_HOSTNAME=localhost
